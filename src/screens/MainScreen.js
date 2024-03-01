@@ -1,18 +1,76 @@
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet, Text, FlatList } from "react-native";
-import TrackPlayer from 'react-native-track-player';
+import { View, StyleSheet, Text, FlatList, TouchableOpacity, PermissionsAndroid } from "react-native";
+import TrackPlayer, { TrackType, Capability, AppKilledPlaybackBehavior, Track } from "react-native-track-player";
+import { addTracks } from '../../trackPlayerServices';
+import { setupPlayer } from '../functionality/musicController';
+import { check, request, Permission } from "react-native-permissions";
 
 const songs = [
     { id: '1', title: 'Song 1' },
     { id: '2', title: 'Song 2' },
 ];
 
-export default function MainScreen() {
-    const [SongList, setSongList] = useState(songs);
+const tracks = [
+    {
+        id:1,
+        url:require('../assets/ytmp3free.cc_foo-fighters-my-hero-youtubemp3free.org.mp3'),
+        title: 'Foo fighters - My Hero'
+    },
+    {
+        id:2,
+        url:require('../assets/ifICouldFly.mp3'), 
+        title:'Joe Satriani - If I could fly'
+    }
+]
 
+    TrackPlayer.updateOptions({
+        stopWithApp: false,
+        android: {
+            appKilledPlaybackBehavior:
+          AppKilledPlaybackBehavior.StopPlaybackAndRemoveNotification,
+        },
+        capabilities: [Capability.Play,
+            Capability.Pause,
+            Capability.SkipToNext,
+            Capability.SkipToPrevious,
+            Capability.Stop,],
+            compactCapabilities: [Capability.Play, Capability.Pause],
+    })
+
+/* export default */ function MainScreen() {
+    const [SongList, setSongList] = useState(tracks);
+    const [play, setPlay] = useState(false);
+
+    const setUpTPlayer = async () => {
+        try {
+            //await TrackPlayer.setupPlayer()
+            await TrackPlayer.add(tracks)
+        } catch (e) {
+            console.log(e)
+        }
+    }
+
+     const requestPermission = async () =>{
+        const granted = await PermissionsAndroid.requestMultiple([
+            PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
+            PermissionsAndroid.PERMISSIONS.READ_MEDIA_AUDIO,
+        ])
+        console.log('granted',granted)
+    } 
+
+    useEffect(()=>{
+        requestPermission()
+
+        //return ()=> TrackPlayer.destroy()
+    }, [])
+    
     const renderSongItem = ({ item }) => (
     <View style={styles.songItem}>
-        <Text>{item.title}</Text>
+        <TouchableOpacity
+                style={styles.btnBox}
+                onPress={() => TrackPlayer.play()}>
+                <Text style={styles.btnText}>{item.title}</Text>
+        </TouchableOpacity>
     </View>
     );
 
@@ -53,8 +111,9 @@ const styles = StyleSheet.create({
         marginRight: 10,
     },
     songItem: {
-        marginTop:10,
-        marginLeft: 10,
+        flex:1,
+        marginTop:'10%',
+        marginLeft: '10%',
     },
     btnBox: {
         backgroundColor: '#5fc3ce',
@@ -62,6 +121,7 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         justifyContent: 'center',
         alignItems: 'center',
-        height: '20%',
         },
 });
+
+export default MainScreen;
