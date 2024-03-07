@@ -6,7 +6,7 @@ module.exports = async function (){
     TrackPlayer.addEventListener(Event.RemotePause, () => TrackPlayer.pause());
 }
 
-export async function setupPlayer(){
+export default async function setupPlayer(){
     let isSetup=false
     try {
         await TrackPlayer.getActiveTrackIndex()
@@ -16,5 +16,5 @@ export async function setupPlayer(){
         isSetup=true
     } finally{
         return isSetup
-    }
+    } 
 }
