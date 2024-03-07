@@ -1,33 +1,19 @@
-import React, { useState, useEffect } from "react";
-import { View, StyleSheet, Text, FlatList, TouchableOpacity, PermissionsAndroid } from "react-native";
+import React, { useState, useEffect, useRef } from "react";
+import { View, StyleSheet, Text, FlatList, TouchableOpacity, PermissionsAndroid, AppRegistry } from "react-native";
 import TrackPlayer, { TrackType, Capability, AppKilledPlaybackBehavior, Track } from "react-native-track-player";
-import { addTracks } from '../../trackPlayerServices';
-import { setupPlayer } from '../functionality/musicController';
-import { check, request, Permission } from "react-native-permissions";
+import getMusicFiles from '../functionality/getMusicFiles.js'
+//import  setupPlayer  from "../functionality/service.js";
 
 const songs = [
     { id: '1', title: 'Song 1' },
     { id: '2', title: 'Song 2' },
 ];
 
-const tracks = [
-    {
-        id:1,
-        url:require('../assets/ytmp3free.cc_foo-fighters-my-hero-youtubemp3free.org.mp3'),
-        title: 'Foo fighters - My Hero'
-    },
-    {
-        id:2,
-        url:require('../assets/ifICouldFly.mp3'), 
-        title:'Joe Satriani - If I could fly'
-    }
-]
-
     TrackPlayer.updateOptions({
         stopWithApp: false,
         android: {
             appKilledPlaybackBehavior:
-          AppKilledPlaybackBehavior.StopPlaybackAndRemoveNotification,
+            AppKilledPlaybackBehavior.StopPlaybackAndRemoveNotification,
         },
         capabilities: [Capability.Play,
             Capability.Pause,
@@ -38,32 +24,49 @@ const tracks = [
     })
 
 /* export default */ function MainScreen() {
-    const [SongList, setSongList] = useState(tracks);
+    //const [SongList, setSongList] = useState(tracks);
     const [play, setPlay] = useState(false);
-
-    const setUpTPlayer = async () => {
-        try {
-            //await TrackPlayer.setupPlayer()
-            await TrackPlayer.add(tracks)
-        } catch (e) {
-            console.log(e)
-        }
-    }
-
-     const requestPermission = async () =>{
-        const granted = await PermissionsAndroid.requestMultiple([
-            PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-            PermissionsAndroid.PERMISSIONS.READ_MEDIA_AUDIO,
-        ])
-        console.log('granted',granted)
-    } 
+    const [tracks, setTracks] = useState([]);
+    let songs
 
     useEffect(()=>{
         requestPermission()
-
-        //return ()=> TrackPlayer.destroy()
+        setupTrackPlayer();
+        //setupPlayer()
     }, [])
-    
+
+    const setupTrackPlayer = async () => {
+        await TrackPlayer.setupPlayer();
+        
+        const musicFiles = await getMusicFiles();
+        
+        const newtracks = musicFiles.map((file, index) => ({
+            id: index.toString(),
+            url: 'file://' + file.path,
+            title: file.name,
+        }));
+        setTracks(newtracks)
+        songs = newtracks
+        await TrackPlayer.add(newtracks);
+    };
+
+    const requestPermission = async () => {
+        try {
+            const granted = await PermissionsAndroid.request(
+                PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE
+            );
+            if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+                console.log('Read external storage permission granted');
+                //setupTrackPlayer();
+            } else {
+                console.log('Read external storage permission denied');
+                // Handle the case where the permission is not granted.
+            }
+        } catch (error) {
+            console.error('Error requesting permission:', error);
+        }
+    };
+
     const renderSongItem = ({ item }) => (
     <View style={styles.songItem}>
         <TouchableOpacity
@@ -74,19 +77,49 @@ const tracks = [
     </View>
     );
 
+    const renderTrackItem = ({ item }) => {
+    
+    return (
+        <View style={styles.songItem}>
+        <TouchableOpacity
+                style={styles.btnBox}
+                onPress={() => TrackPlayer.skip(item.id)}>
+                <Text >{item.title}</Text>
+        </TouchableOpacity>
+    </View>
+    );
+    }
+
     return (
     <View style={styles.main}>
         <View style={styles.containerHeader}>
         <Text style={styles.TopText}>Music Player</Text>
     </View>
 
+    {/* <View>
+    <TouchableOpacity
+                style={styles.btnBox}
+                onPress={() => TrackPlayer.play()}>
+                <Text >PLAY</Text>
+        </TouchableOpacity>
+    </View> */}
+
     <View style={styles.FlatListStyle}>
         <FlatList
-            data={SongList}
+            data={tracks}
             keyExtractor={(item) => item.id}
-            renderItem={renderSongItem}
+            renderItem={renderTrackItem}
         />
     </View>
+
+    <View style={styles.bottomButtonContainer}>
+    <TouchableOpacity
+                style={styles.btnBox}
+                onPress={() => TrackPlayer.play()}>
+                <Text >PLAY</Text>
+        </TouchableOpacity>
+    </View>
+
     </View>
     );
 }
@@ -101,6 +134,12 @@ const styles = StyleSheet.create({
         padding: 10,
         alignItems: 'center',
         justifyContent: 'center',
+    },
+    bottomButtonContainer: {
+        backgroundColor: '#fff',
+        padding: 10,
+        alignItems: 'center',
+        justifyContent: 'bottom',
     },
     TopText: {
         fontSize: 24,
