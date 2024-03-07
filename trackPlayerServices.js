@@ -8,7 +8,7 @@
   export async function setupPlayer() {
     let isSetup = false;
     try {
-      await TrackPlayer.getCurrentTrack();
+      await TrackPlayer.getActiveTrackIndex();
       isSetup = true;
     }
     catch {
