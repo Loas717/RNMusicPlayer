@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { View, StyleSheet, Text, FlatList, TouchableOpacity, PermissionsAndroid, AppRegistry } from "react-native";
-import TrackPlayer, { TrackType, Capability, AppKilledPlaybackBehavior, Track } from "react-native-track-player";
+import TrackPlayer from "react-native-track-player";
+import { TrackType, Capability, AppKilledPlaybackBehavior } from "react-native-track-player";
+import { getQueue } from "react-native-track-player/lib/trackPlayer.js";
 import getMusicFiles from '../functionality/getMusicFiles.js'
 //import  setupPlayer  from "../functionality/service.js";
 
@@ -9,45 +11,52 @@ const songs = [
     { id: '2', title: 'Song 2' },
 ];
 
-    TrackPlayer.updateOptions({
-        stopWithApp: false,
-        android: {
-            appKilledPlaybackBehavior:
-            AppKilledPlaybackBehavior.StopPlaybackAndRemoveNotification,
-        },
-        capabilities: [Capability.Play,
-            Capability.Pause,
-            Capability.SkipToNext,
-            Capability.SkipToPrevious,
-            Capability.Stop,],
-            compactCapabilities: [Capability.Play, Capability.Pause],
-    })
-
 /* export default */ function MainScreen() {
     //const [SongList, setSongList] = useState(tracks);
-    const [play, setPlay] = useState(false);
+    const [player, setPlayer] = useState(false);
     const [tracks, setTracks] = useState([]);
+    const [songIndex, setsongIndex] = useState(0);
     let songs
 
     useEffect(()=>{
         requestPermission()
-        setupTrackPlayer();
+        setupPlayer();
         //setupPlayer()
     }, [])
 
-    const setupTrackPlayer = async () => {
-        await TrackPlayer.setupPlayer();
-        
-        const musicFiles = await getMusicFiles();
-        
-        const newtracks = musicFiles.map((file, index) => ({
+    const setupPlayer = async () => {
+        try {
+            const musicFiles = await getMusicFiles();
+            if(player==false){
+                await TrackPlayer.setupPlayer();
+                setPlayer(true);
+            }
+            await TrackPlayer.updateOptions({
+            stopWithApp: false,
+            android: {
+            appKilledPlaybackBehavior:
+            AppKilledPlaybackBehavior.StopPlaybackAndRemoveNotification,
+            },
+            capabilities: [
+                Capability.Play,
+                Capability.Pause,
+                Capability.SkipToNext,
+                Capability.SkipToPrevious,
+                Capability.Stop,
+                Capability.Skip,
+            ],
+            compactCapabilities: [Capability.Play, Capability.Pause],
+            });
+            const newtracks = musicFiles.map((file, index) => ({
             id: index.toString(),
             url: 'file://' + file.path,
             title: file.name,
         }));
         setTracks(newtracks)
-        songs = newtracks
-        await TrackPlayer.add(newtracks);
+            await TrackPlayer.add(newtracks);
+        } catch (error) {
+            console.log(error);
+        }
     };
 
     const requestPermission = async () => {
@@ -57,33 +66,25 @@ const songs = [
             );
             if (granted === PermissionsAndroid.RESULTS.GRANTED) {
                 console.log('Read external storage permission granted');
-                //setupTrackPlayer();
             } else {
                 console.log('Read external storage permission denied');
-                // Handle the case where the permission is not granted.
             }
         } catch (error) {
             console.error('Error requesting permission:', error);
         }
     };
 
-    const renderSongItem = ({ item }) => (
-    <View style={styles.songItem}>
-        <TouchableOpacity
-                style={styles.btnBox}
-                onPress={() => TrackPlayer.play()}>
-                <Text style={styles.btnText}>{item.title}</Text>
-        </TouchableOpacity>
-    </View>
-    );
+    const handleSkip =  async (item) => {
+        const trackId = parseInt(item.id, 10);
+        await TrackPlayer.skip(trackId);
+        };
 
     const renderTrackItem = ({ item }) => {
-    
     return (
         <View style={styles.songItem}>
         <TouchableOpacity
                 style={styles.btnBox}
-                onPress={() => TrackPlayer.skip(item.id)}>
+                onPress={() => handleSkip(item)}>
                 <Text >{item.title}</Text>
         </TouchableOpacity>
     </View>
@@ -95,14 +96,6 @@ const songs = [
         <View style={styles.containerHeader}>
         <Text style={styles.TopText}>Music Player</Text>
     </View>
-
-    {/* <View>
-    <TouchableOpacity
-                style={styles.btnBox}
-                onPress={() => TrackPlayer.play()}>
-                <Text >PLAY</Text>
-        </TouchableOpacity>
-    </View> */}
 
     <View style={styles.FlatListStyle}>
         <FlatList
