@@ -1,24 +1,22 @@
 import React, { useState, useEffect, useRef } from "react";
-import { View, StyleSheet, Text, FlatList, TouchableOpacity, PermissionsAndroid, AppRegistry } from "react-native";
+import { View, StyleSheet, Text, FlatList, TouchableOpacity, PermissionsAndroid, SafeAreaView } from "react-native";
 import TrackPlayer from "react-native-track-player";
 import { TrackType, Capability, AppKilledPlaybackBehavior } from "react-native-track-player";
 import { getQueue } from "react-native-track-player/lib/trackPlayer.js";
 import getMusicFiles from '../functionality/getMusicFiles.js'
-//import  setupPlayer  from "../functionality/service.js";
+import PlayerSong from "../Modals/PlayerSong.js";
 
-const songs = [
-    { id: '1', title: 'Song 1' },
-    { id: '2', title: 'Song 2' },
-];
+//const {width, height} = Dimensions.get('window');
 
-/* export default */ function MainScreen() {
-    //const [SongList, setSongList] = useState(tracks);
+    function MainScreen() {
     const [player, setPlayer] = useState(false);
     const [tracks, setTracks] = useState([]);
     const [songIndex, setsongIndex] = useState(0);
-    let songs
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [playerVisible, setplayerVisible] = useState(false)
 
     useEffect(()=>{
+        console.log(playerVisible)
         requestPermission()
         setupPlayer();
         //setupPlayer()
@@ -27,6 +25,7 @@ const songs = [
     const setupPlayer = async () => {
         try {
             const musicFiles = await getMusicFiles();
+            console.log(musicFiles)
             if(player==false){
                 await TrackPlayer.setupPlayer();
                 setPlayer(true);
@@ -75,9 +74,22 @@ const songs = [
     };
 
     const handleSkip =  async (item) => {
+        const currentTrack = await TrackPlayer.getActiveTrackIndex();
         const trackId = parseInt(item.id, 10);
+        console.log(currentTrack)
         await TrackPlayer.skip(trackId);
+        setplayerVisible(true)
         };
+    const handlePlay = async ()=>{
+        if(isPlaying==false){
+            await TrackPlayer.play()
+            setIsPlaying(true)
+        }
+        if(isPlaying==true){
+            await TrackPlayer.pause()
+            setIsPlaying(false)
+        }
+    }
 
     const renderTrackItem = ({ item }) => {
     return (
@@ -92,10 +104,16 @@ const songs = [
     }
 
     return (
+        <SafeAreaView style={styles.main}>
     <View style={styles.main}>
         <View style={styles.containerHeader}>
         <Text style={styles.TopText}>Music Player</Text>
     </View>
+    <PlayerSong
+        isVisible={playerVisible}
+        setVisible={setplayerVisible}
+        tracks={tracks}
+    />
 
     <View style={styles.FlatListStyle}>
         <FlatList
@@ -108,12 +126,13 @@ const songs = [
     <View style={styles.bottomButtonContainer}>
     <TouchableOpacity
                 style={styles.btnBox}
-                onPress={() => TrackPlayer.play()}>
+                onPress={() => handlePlay()}>
                 <Text >PLAY</Text>
         </TouchableOpacity>
     </View>
 
     </View>
+    </SafeAreaView>
     );
 }
 
