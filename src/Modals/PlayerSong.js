@@ -9,14 +9,14 @@ import {
 import  Modal  from 'react-native-modal';
 import Slider from '@react-native-community/slider';
 import { getQueue } from 'react-native-track-player/lib/trackPlayer';
-import TrackPlayer from 'react-native-track-player';
+import TrackPlayer, {useProgress} from 'react-native-track-player';
 
 let ScreenHeight = Dimensions.get('window').height;
 let ScreenWidth = Dimensions.get('window').width;
 
 export default function PlayerSong(props){
-    const {isVisible, setVisible, tracks}= props;
-    const [isPlaying, setIsPlaying] = useState(false);
+    const {isVisible, setVisible, tracks, isPlaying, setIsPlaying}= props;
+    const progress = useProgress();
     const fecharModal = function () {
         setVisible(false);
         };
@@ -37,36 +37,38 @@ export default function PlayerSong(props){
         console.log(te)
     }
 
-return(
-    <Modal
-        propagateSwipe={false}
-        animationIn="fadeInUp"
-        animationOut="fadeInDown"
-        backdropOpacity={0.5}
-        style={styles.modal}
-        isVisible={isVisible}
-        onBackButtonPress={() => fecharModal()}
-        onBackdropPress={() => fecharModal()}>
+    return (
+        <Modal
+            propagateSwipe={false}
+            animationIn="fadeInUp"
+            animationOut="fadeInDown"
+            backdropOpacity={0.5}
+            style={styles.modal}
+            isVisible={isVisible}
+            onBackButtonPress={() => fecharModal()}
+            onBackdropPress={() => fecharModal()}>
             <View style={styles.modalContent}>
-                <View style={styles.buttonContainer}>
-                    <View style={styles.sliderContainer}>
-                    <Slider
-                        style={styles.styleSlider}
-                        minimumValue={0}
-                        maximumValue={1}
-                        minimumTrackTintColor="#FFFFFF"
-                        maximumTrackTintColor="#FFFFFF"
-                    />
-                    </View>
-                <TouchableOpacity style={styles.btnBox}
-                onPress={() => handlePlay()}>
+                <View style={styles.sliderContainer}>
+                <Slider
+                style={styles.styleSlider}
+                value={progress.position}
+                minimumValue={0}
+                maximumValue={progress.duration}
+                minimumTrackTintColor="#FFFFFF"
+                maximumTrackTintColor="#FFFFFF"
+                onSlidingComplete={async value => {
+                    await TrackPlayer.seekTo(value);
+                }}
+                />
+            </View>
+            <View style={styles.buttonContainer}>
+                <TouchableOpacity style={styles.btnBox} onPress={() => handlePlay()}>
                     {isPlaying ? <Text>Pause</Text> : <Text>Play</Text>}
                 </TouchableOpacity>
                 </View>
-                
             </View>
-    </Modal>
-)
+        </Modal>
+    );
 }
 
 const styles = StyleSheet.create({
@@ -74,35 +76,29 @@ const styles = StyleSheet.create({
         margin: 0,
     },
     modalContent: {
-        //margin: 0,
-        flex: 1,  
-        backgroundColor: '#000000',
+        flex: 1,
+        backgroundColor: '#000',
+        justifyContent: 'flex-end',
     },
-    buttonContainer:{
-        flex:1,
-        justifyContent: 'flex-end'
+    sliderContainer: {
+        paddingHorizontal: 20,
+        paddingBottom: 20,
+    },
+    styleSlider: {
+        height: 40,
+    },
+    buttonContainer: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: '10%',
     },
     btnBox: {
-        backgroundColor: '#fff',
+        backgroundColor: '#5fc3ce',
         width: '20%',
-        height:'10%',
-        marginLeft:'40%',
-        marginBottom:'16%',
-        borderRadius: 50,
         aspectRatio: 1,
+        borderRadius: 50,
         justifyContent: 'center',
         alignItems: 'center',
     },
-    sliderContainer:{
-        flex:1,
-        justifyContent:'flex-end',
-        marginBottom:'-120%',
-        marginLeft:'10%',
-    },
-    styleSlider:{
-        flex:1,
-        width: '90%', 
-        height: "20%",
-    }
-    
-})
+});

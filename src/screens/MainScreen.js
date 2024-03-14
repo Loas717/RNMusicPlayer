@@ -113,6 +113,8 @@ import PlayerSong from "../Modals/PlayerSong.js";
         isVisible={playerVisible}
         setVisible={setplayerVisible}
         tracks={tracks}
+        isPlaying={isPlaying}
+        setIsPlaying={setIsPlaying}
     />
 
     <View style={styles.FlatListStyle}>
