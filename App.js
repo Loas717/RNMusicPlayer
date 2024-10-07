@@ -1,12 +1,13 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import MainScreen from './src/screens/MainScreen';
-import PlayMusicTest from './src/screens/PlayMusicTest'
+import { PaperProvider } from 'react-native-paper';
 
 export default function App() {
   return (
-    
-    <MainScreen></MainScreen>
+    <PaperProvider>
+      <MainScreen/>
+    </PaperProvider>
   );
 }
 

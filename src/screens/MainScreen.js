@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
-import { View, StyleSheet, Text, FlatList, TouchableOpacity, PermissionsAndroid, SafeAreaView } from "react-native";
+import { View, StyleSheet, Text, FlatList, TouchableOpacity, PermissionsAndroid, SafeAreaView, Animated } from "react-native";
 import TrackPlayer from "react-native-track-player";
 import { TrackType, Capability, AppKilledPlaybackBehavior } from "react-native-track-player";
 import { getQueue } from "react-native-track-player/lib/trackPlayer.js";
 import getMusicFiles from '../functionality/getMusicFiles.js'
 import PlayerSong from "../Modals/PlayerSong.js";
+import { Button } from 'react-native-paper';
 
 //const {width, height} = Dimensions.get('window');
 
@@ -19,7 +20,6 @@ import PlayerSong from "../Modals/PlayerSong.js";
         console.log(playerVisible)
         requestPermission()
         setupPlayer();
-        //setupPlayer()
     }, [])
 
     const setupPlayer = async () => {
@@ -93,12 +93,15 @@ import PlayerSong from "../Modals/PlayerSong.js";
 
     const renderTrackItem = ({ item }) => {
     return (
-        <View style={styles.songItem}>
-        <TouchableOpacity
+    <View style={styles.songItem}>
+        <Button mode="contained" onPress={() => handleSkip(item)} style={styles.button}>
+            {item.title}
+        </Button>
+        {/* <TouchableOpacity
                 style={styles.btnBox}
                 onPress={() => handleSkip(item)}>
                 <Text >{item.title}</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
     </View>
     );
     }
@@ -125,13 +128,13 @@ import PlayerSong from "../Modals/PlayerSong.js";
         />
     </View>
 
-    <View style={styles.bottomButtonContainer}>
+    {/* <View style={styles.bottomButtonContainer}>
     <TouchableOpacity
                 style={styles.btnBox}
                 onPress={() => handlePlay()}>
                 <Text >PLAY</Text>
         </TouchableOpacity>
-    </View>
+    </View> */}
 
     </View>
     </SafeAreaView>
@@ -165,8 +168,9 @@ const styles = StyleSheet.create({
     },
     songItem: {
         flex:1,
-        marginTop:'10%',
-        marginLeft: '10%',
+        marginTop: '10%',
+        justifyContent: 'center', // Center vertically
+        alignItems: 'center', // Center horizontally
     },
     btnBox: {
         backgroundColor: '#5fc3ce',
@@ -174,6 +178,11 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         justifyContent: 'center',
         alignItems: 'center',
+        },
+        button: {
+            width: '80%', // Adjust width as needed
+            borderRadius: 20,
+            justifyContent: 'center',
         },
 });
 
